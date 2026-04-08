@@ -7,7 +7,7 @@ A lightweight distributed key-value store designed for experimentally studying t
 ## Architecture Overview
 
 ```
-┌─────────────────────┐     heartbeat + replication     ┌─────────────────────┐
+┌─────────────────────┐     heartbeat + replication       ┌─────────────────────┐
 │                     │ ◄──────────── TCP ──────────────► │                     │
 │  Node 0 (Primary)   │                                   │  Node 1 (Secondary) │
 │  - Accepts SET/GET  │                                   │  - Receives replicas│
@@ -19,8 +19,8 @@ A lightweight distributed key-value store designed for experimentally studying t
          │ SET/GET (TCP)
          │
 ┌─────────────────────┐
-│  Workload Generator  │
-│  (kv_workload)       │
+│  Workload Generator │
+│  (kv_workload)      │
 └─────────────────────┘
 ```
 
