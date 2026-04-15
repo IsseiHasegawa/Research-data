@@ -1,0 +1,5 @@
+workload: num_clients=4 num_ops=600 key_space=50 distribution=zipf_alpha=0.990000
+client client client 2: connected
+client 1: connected
+3: connected
+0: connected

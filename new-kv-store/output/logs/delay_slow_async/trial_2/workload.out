@@ -1,2 +1,4 @@
-workload: connected to 127.0.0.1:9100
-workload: done. success=500 fail=0
+workload: num_clients=1 num_ops=600 key_space=50 distribution=uniform
+client 0: connected
+client 0: done. success=600 fail=0 stale_reads=219
+workload: all clients done. total_ops=600

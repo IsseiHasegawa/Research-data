@@ -116,15 +116,22 @@ def run_one_trial(config: dict, base: dict, trial_num: int, trial_dir: Path):
     hb_timeout = config["hb_timeout_ms"]
     repl_mode = config["repl_mode"]
     fault_type = config["fault_type"]
+    fd_algo = config.get("fd_algo", "fixed")
+    phi_threshold = config.get("phi_threshold", 8.0)
 
     port0 = base.get("node_ports", [9100, 9101])[0]
     port1 = base.get("node_ports", [9100, 9101])[1]
     warmup_sec = base.get("warmup_sec", 3.0)
     fault_time_sec = base.get("fault_time_sec", 5.0)
     experiment_duration = base.get("experiment_duration_sec", 10.0)
-    wl_num_ops = base.get("workload_num_ops", 500)
-    wl_set_ratio = base.get("workload_set_ratio", 0.5)
-    wl_rate = base.get("workload_rate", 100)
+    wl_num_ops    = base.get("workload_num_ops", 500)
+    wl_set_ratio  = base.get("workload_set_ratio", 0.5)
+    wl_rate       = base.get("workload_rate", 100)
+    # Per-config overrides take priority over base defaults
+    wl_num_clients = config.get("workload_num_clients",
+                                 base.get("workload_num_clients", 1))
+    wl_zipf_alpha  = config.get("workload_zipf_alpha",
+                                 base.get("workload_zipf_alpha", 0.0))
 
     run_id = f"{name}_t{trial_num}_{wall_ms()}"
     trial_dir.mkdir(parents=True, exist_ok=True)
@@ -133,6 +140,8 @@ def run_one_trial(config: dict, base: dict, trial_num: int, trial_dir: Path):
     log_n1 = trial_dir / "node1.jsonl"
     log_wl = trial_dir / "workload.jsonl"
     injector_log = trial_dir / "injector.jsonl"
+    wal_n0 = trial_dir / "node0.wal"
+    wal_n1 = trial_dir / "node1.wal"
 
     env = os.environ.copy()
     env["RUN_ID"] = run_id
@@ -141,13 +150,17 @@ def run_one_trial(config: dict, base: dict, trial_num: int, trial_dir: Path):
 
     try:
         # 1. Start secondary (Node 1)
+        n1_cmd = [
+            str(KVNODE),
+            "--id", "node1", "--port", str(port1),
+            "--log_path", str(log_n1),
+            "--run_id", run_id,
+            "--hb_interval_ms", str(hb_interval),
+            "--hb_timeout_ms", str(hb_timeout),
+            "--wal_path", str(wal_n1),
+        ]
         proc_n1 = subprocess.Popen(
-            [str(KVNODE),
-             "--id", "node1", "--port", str(port1),
-             "--log_path", str(log_n1),
-             "--run_id", run_id,
-             "--hb_interval_ms", str(hb_interval),
-             "--hb_timeout_ms", str(hb_timeout)],
+            n1_cmd,
             stdout=(trial_dir / "node1.out").open("w"),
             stderr=subprocess.STDOUT,
             env=env,
@@ -157,15 +170,21 @@ def run_one_trial(config: dict, base: dict, trial_num: int, trial_dir: Path):
             print(f"  Warning: Node 1 port {port1} not ready", file=sys.stderr)
 
         # 2. Start primary (Node 0)
+        n0_cmd = [
+            str(KVNODE),
+            "--id", "node0", "--port", str(port0), "--primary",
+            "--peer", f"127.0.0.1:{port1}",
+            "--log_path", str(log_n0),
+            "--run_id", run_id,
+            "--hb_interval_ms", str(hb_interval),
+            "--hb_timeout_ms", str(hb_timeout),
+            "--repl_mode", repl_mode,
+            "--wal_path", str(wal_n0),
+            "--fd_algo", fd_algo,
+            "--phi_threshold", str(phi_threshold),
+        ]
         proc_n0 = subprocess.Popen(
-            [str(KVNODE),
-             "--id", "node0", "--port", str(port0), "--primary",
-             "--peer", f"127.0.0.1:{port1}",
-             "--log_path", str(log_n0),
-             "--run_id", run_id,
-             "--hb_interval_ms", str(hb_interval),
-             "--hb_timeout_ms", str(hb_timeout),
-             "--repl_mode", repl_mode],
+            n0_cmd,
             stdout=(trial_dir / "node0.out").open("w"),
             stderr=subprocess.STDOUT,
             env=env,
@@ -175,14 +194,19 @@ def run_one_trial(config: dict, base: dict, trial_num: int, trial_dir: Path):
             print(f"  Warning: Node 0 port {port0} not ready", file=sys.stderr)
 
         # 3. Start workload generator (targets Node 0)
+        wl_cmd = [
+            str(WORKLOAD),
+            "--target", f"127.0.0.1:{port0}",
+            "--num_ops", str(wl_num_ops),
+            "--set_ratio", str(wl_set_ratio),
+            "--rate", str(wl_rate),
+            "--num_clients", str(wl_num_clients),
+            "--zipf_alpha", str(wl_zipf_alpha),
+            "--log_path", str(log_wl),
+            "--run_id", run_id,
+        ]
         proc_wl = subprocess.Popen(
-            [str(WORKLOAD),
-             "--target", f"127.0.0.1:{port0}",
-             "--num_ops", str(wl_num_ops),
-             "--set_ratio", str(wl_set_ratio),
-             "--rate", str(wl_rate),
-             "--log_path", str(log_wl),
-             "--run_id", run_id],
+            wl_cmd,
             stdout=(trial_dir / "workload.out").open("w"),
             stderr=subprocess.STDOUT,
             env=env,
@@ -202,7 +226,11 @@ def run_one_trial(config: dict, base: dict, trial_num: int, trial_dir: Path):
             "hb_interval_ms": hb_interval,
             "hb_timeout_ms": hb_timeout,
             "repl_mode": repl_mode,
+            "fd_algo": fd_algo,
+            "phi_threshold": phi_threshold,
             "fault_type": fault_type,
+            "workload_num_clients": wl_num_clients,
+            "workload_zipf_alpha": wl_zipf_alpha,
         }]
 
         if fault_type == "crash":
@@ -269,12 +297,17 @@ def run_one_trial(config: dict, base: dict, trial_num: int, trial_dir: Path):
         "hb_timeout_ms": hb_timeout,
         "repl_mode": repl_mode,
         "fault_type": fault_type,
+        "fd_algo": fd_algo,
+        "phi_threshold": phi_threshold,
+        "workload_num_clients": wl_num_clients,
+        "workload_zipf_alpha": wl_zipf_alpha,
         "t_fault_ms": t_fault,
         "t_detect_ms": t_detect,
         "detection_latency_ms": detection_latency_ms,
     }
     print(f"  Trial {trial_num}: detection_latency_ms = {detection_latency_ms}")
     return result
+
 
 
 def main():

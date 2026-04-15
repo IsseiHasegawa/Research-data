@@ -2,11 +2,13 @@
   "base": {
     "node_ports": [9100, 9101],
     "warmup_sec": 3.0,
-    "experiment_duration_sec": 10.0,
-    "fault_time_sec": 5.0,
-    "workload_num_ops": 500,
+    "experiment_duration_sec": 12.0,
+    "fault_time_sec": 6.0,
+    "workload_num_ops": 600,
     "workload_set_ratio": 0.5,
     "workload_rate": 100,
+    "workload_num_clients": 1,
+    "workload_zipf_alpha": 0.0,
     "trials_per_config": 5
   },
   "configurations": [
@@ -15,6 +17,7 @@
       "hb_interval_ms": 50,
       "hb_timeout_ms": 150,
       "repl_mode": "none",
+      "fd_algo": "fixed",
       "fault_type": "crash"
     },
     {
@@ -22,6 +25,7 @@
       "hb_interval_ms": 200,
       "hb_timeout_ms": 600,
       "repl_mode": "none",
+      "fd_algo": "fixed",
       "fault_type": "crash"
     },
     {
@@ -29,6 +33,7 @@
       "hb_interval_ms": 50,
       "hb_timeout_ms": 150,
       "repl_mode": "sync",
+      "fd_algo": "fixed",
       "fault_type": "crash"
     },
     {
@@ -36,6 +41,7 @@
       "hb_interval_ms": 50,
       "hb_timeout_ms": 150,
       "repl_mode": "async",
+      "fd_algo": "fixed",
       "fault_type": "crash"
     },
     {
@@ -43,6 +49,7 @@
       "hb_interval_ms": 200,
       "hb_timeout_ms": 600,
       "repl_mode": "sync",
+      "fd_algo": "fixed",
       "fault_type": "crash"
     },
     {
@@ -50,6 +57,7 @@
       "hb_interval_ms": 200,
       "hb_timeout_ms": 600,
       "repl_mode": "async",
+      "fd_algo": "fixed",
       "fault_type": "crash"
     },
     {
@@ -57,6 +65,7 @@
       "hb_interval_ms": 50,
       "hb_timeout_ms": 150,
       "repl_mode": "sync",
+      "fd_algo": "fixed",
       "fault_type": "delay",
       "delay_ms": 500
     },
@@ -65,8 +74,109 @@
       "hb_interval_ms": 200,
       "hb_timeout_ms": 600,
       "repl_mode": "async",
+      "fd_algo": "fixed",
       "fault_type": "delay",
       "delay_ms": 500
+    },
+    {
+      "_comment": "=== Phi Accrual FD configurations ===",
+      "name": "phi_fast_no_repl",
+      "hb_interval_ms": 50,
+      "hb_timeout_ms": 150,
+      "repl_mode": "none",
+      "fd_algo": "phi",
+      "phi_threshold": 8.0,
+      "fault_type": "crash"
+    },
+    {
+      "name": "phi_slow_no_repl",
+      "hb_interval_ms": 200,
+      "hb_timeout_ms": 600,
+      "repl_mode": "none",
+      "fd_algo": "phi",
+      "phi_threshold": 8.0,
+      "fault_type": "crash"
+    },
+    {
+      "name": "phi_fast_sync_repl",
+      "hb_interval_ms": 50,
+      "hb_timeout_ms": 150,
+      "repl_mode": "sync",
+      "fd_algo": "phi",
+      "phi_threshold": 8.0,
+      "fault_type": "crash"
+    },
+    {
+      "name": "phi_fast_async_repl",
+      "hb_interval_ms": 50,
+      "hb_timeout_ms": 150,
+      "repl_mode": "async",
+      "fd_algo": "phi",
+      "phi_threshold": 8.0,
+      "fault_type": "crash"
+    },
+    {
+      "name": "phi_delay_fast_sync",
+      "hb_interval_ms": 50,
+      "hb_timeout_ms": 150,
+      "repl_mode": "sync",
+      "fd_algo": "phi",
+      "phi_threshold": 8.0,
+      "fault_type": "delay",
+      "delay_ms": 500
+    },
+    {
+      "name": "phi_delay_slow_async",
+      "hb_interval_ms": 200,
+      "hb_timeout_ms": 600,
+      "repl_mode": "async",
+      "fd_algo": "phi",
+      "phi_threshold": 8.0,
+      "fault_type": "delay",
+      "delay_ms": 500
+    },
+    {
+      "_comment": "=== Zipfian workload configurations (α=0.99, hot-key pressure) ===",
+      "name": "zipf_fast_sync",
+      "hb_interval_ms": 50,
+      "hb_timeout_ms": 150,
+      "repl_mode": "sync",
+      "fd_algo": "fixed",
+      "fault_type": "crash",
+      "workload_zipf_alpha": 0.99,
+      "workload_num_clients": 4
+    },
+    {
+      "name": "zipf_fast_async",
+      "hb_interval_ms": 50,
+      "hb_timeout_ms": 150,
+      "repl_mode": "async",
+      "fd_algo": "fixed",
+      "fault_type": "crash",
+      "workload_zipf_alpha": 0.99,
+      "workload_num_clients": 4
+    },
+    {
+      "name": "zipf_phi_sync",
+      "hb_interval_ms": 50,
+      "hb_timeout_ms": 150,
+      "repl_mode": "sync",
+      "fd_algo": "phi",
+      "phi_threshold": 8.0,
+      "fault_type": "crash",
+      "workload_zipf_alpha": 0.99,
+      "workload_num_clients": 4
+    },
+    {
+      "name": "zipf_phi_async",
+      "hb_interval_ms": 50,
+      "hb_timeout_ms": 150,
+      "repl_mode": "async",
+      "fd_algo": "phi",
+      "phi_threshold": 8.0,
+      "fault_type": "crash",
+      "workload_zipf_alpha": 0.99,
+      "workload_num_clients": 4
     }
   ]
 }

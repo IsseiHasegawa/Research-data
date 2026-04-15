@@ -7,6 +7,10 @@
  *   - Builder functions that produce single-line JSON strings (with trailing \n)
  *   - Lightweight parser helpers to extract fields from JSON lines
  *
+ * Research additions:
+ *   - "version" field added to KV_SET, KV_GET_RESP, REPL_SET for vector clock
+ *     propagation. Enables measurement of read-your-writes consistency violations.
+ *
  * Design note: We intentionally avoid pulling in a full JSON library.
  * The message format is simple enough that hand-rolled serialization is
  * clearer and has zero external dependencies.
@@ -131,12 +135,14 @@ inline bool extract_bool(const std::string& line, const std::string& field, bool
 // ─── Message builders ─────────────────────────────────────────────────────────
 // Each returns a single-line JSON string with trailing newline.
 
-// Client → Node: SET request
+// Client → Node: SET request (version is the client's last-written version for this key)
 inline std::string make_kv_set(const std::string& key, const std::string& value,
-                               const std::string& req_id) {
+                               const std::string& req_id,
+                               const std::string& version_json = "{}") {
     return "{\"type\":\"KV_SET\",\"key\":\"" + json_escape(key) +
            "\",\"value\":\"" + json_escape(value) +
-           "\",\"req_id\":\"" + json_escape(req_id) + "\"}\n";
+           "\",\"req_id\":\"" + json_escape(req_id) +
+           "\",\"version\":" + version_json + "}\n";
 }
 
 // Node → Client: SET response
@@ -153,19 +159,16 @@ inline std::string make_kv_get(const std::string& key, const std::string& req_id
            "\",\"req_id\":\"" + json_escape(req_id) + "\"}\n";
 }
 
-// Node → Client: GET response
+// Node → Client: GET response (includes version vector of the returned value)
 inline std::string make_kv_get_resp(const std::string& key, bool ok,
                                     const std::string& value,
-                                    const std::string& req_id) {
-    std::string v_part;
-    if (ok) {
-        v_part = "\"" + json_escape(value) + "\"";
-    } else {
-        v_part = "null";
-    }
+                                    const std::string& req_id,
+                                    const std::string& version_json = "{}") {
+    std::string v_part = ok ? ("\"" + json_escape(value) + "\"") : "null";
     return "{\"type\":\"KV_GET_RESP\",\"key\":\"" + json_escape(key) +
            "\",\"value\":" + v_part +
            ",\"ok\":" + (ok ? "true" : "false") +
+           ",\"version\":" + version_json +
            ",\"req_id\":\"" + json_escape(req_id) + "\"}\n";
 }
 
@@ -185,12 +188,14 @@ inline std::string make_heartbeat_ack(uint64_t seq, int64_t ts_ms,
            ",\"sender_id\":\"" + json_escape(sender_id) + "\"}\n";
 }
 
-// Primary → Secondary: replicate a SET
+// Primary → Secondary: replicate a SET (includes version for causality tracking)
 inline std::string make_repl_set(const std::string& key, const std::string& value,
-                                 uint64_t seq) {
+                                 uint64_t seq,
+                                 const std::string& version_json = "{}") {
     return "{\"type\":\"REPL_SET\",\"key\":\"" + json_escape(key) +
            "\",\"value\":\"" + json_escape(value) +
-           "\",\"seq\":" + std::to_string(seq) + "}\n";
+           "\",\"seq\":" + std::to_string(seq) +
+           ",\"version\":" + version_json + "}\n";
 }
 
 // Secondary → Primary: replication ack

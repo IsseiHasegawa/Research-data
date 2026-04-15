@@ -1,0 +1,3 @@
+{"event": "run_start", "run_id": "phi_fast_no_repl_t5_1776218917121", "ts_ms": 1776218917245, "config": "phi_fast_no_repl", "hb_interval_ms": 50, "hb_timeout_ms": 150, "repl_mode": "none", "fd_algo": "phi", "phi_threshold": 8.0, "fault_type": "crash", "workload_num_clients": 1, "workload_zipf_alpha": 0.0}
+{"event": "fault_inject", "run_id": "phi_fast_no_repl_t5_1776218917121", "ts_ms": 1776218920245, "fault_type": "crash", "target": "node1"}
+{"event": "detection_result", "run_id": "phi_fast_no_repl_t5_1776218917121", "t_fault_ms": 1776218920245, "t_detect_ms": 1776218920323, "detection_latency_ms": 78}

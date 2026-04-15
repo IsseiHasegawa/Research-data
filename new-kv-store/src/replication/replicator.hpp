@@ -88,12 +88,13 @@ public:
      * Replicate a SET operation to the secondary.
      *
      * - "none":  returns true immediately.
-     * - "sync":  sends REPL_SET, waits for REPL_SET_ACK, returns ok.
-     * - "async": enqueues the message and returns true immediately.
+     * - "sync":  sends REPL_SET (with version), waits for REPL_SET_ACK.
+     * - "async": enqueues and returns true immediately.
      *
-     * If the peer is declared dead, replication is skipped (logged).
+     * @param version_json  Serialized version vector, e.g. {"node0":5}
      */
-    bool replicate(const std::string& key, const std::string& value) {
+    bool replicate(const std::string& key, const std::string& value,
+                   const std::string& version_json = "{}") {
         if (mode_ == "none") return true;
         if (!peer_alive_.load()) {
             logger_.log("repl_skipped", peer_id_,
@@ -104,11 +105,8 @@ public:
 
         uint64_t s = seq_.fetch_add(1);
 
-        if (mode_ == "sync") {
-            return replicate_sync(key, value, s);
-        } else if (mode_ == "async") {
-            return replicate_async(key, value, s);
-        }
+        if (mode_ == "sync")  return replicate_sync(key, value, s, version_json);
+        if (mode_ == "async") return replicate_async(key, value, s, version_json);
         return false;
     }
 
@@ -128,13 +126,14 @@ public:
     const std::string& mode() const { return mode_; }
 
 private:
-    // Synchronous replication: send and wait for ack.
-    bool replicate_sync(const std::string& key, const std::string& value, uint64_t s) {
-        std::string m = msg::make_repl_set(key, value, s);
+    // Synchronous replication: send with version vector and wait for ack.
+    bool replicate_sync(const std::string& key, const std::string& value,
+                        uint64_t s, const std::string& version_json) {
+        std::string m = msg::make_repl_set(key, value, s, version_json);
         logger_.log("repl_start", peer_id_,
                     "{\"key\":\"" + msg::json_escape(key) +
                     "\",\"seq\":" + std::to_string(s) +
-                    ",\"mode\":\"sync\"}");
+                    ",\"mode\":\"sync\",\"version\":" + version_json + "}");
 
         std::lock_guard<std::mutex> lock(io_mu_);
         if (!net::send_msg(peer_fd_, m)) {
@@ -174,14 +173,15 @@ private:
     }
 
     // Asynchronous replication: enqueue for background sending.
-    bool replicate_async(const std::string& key, const std::string& value, uint64_t s) {
+    bool replicate_async(const std::string& key, const std::string& value,
+                         uint64_t s, const std::string& version_json) {
         logger_.log("repl_start", peer_id_,
                     "{\"key\":\"" + msg::json_escape(key) +
                     "\",\"seq\":" + std::to_string(s) +
-                    ",\"mode\":\"async\"}");
+                    ",\"mode\":\"async\",\"version\":" + version_json + "}");
         {
             std::lock_guard<std::mutex> lock(queue_mu_);
-            queue_.push({key, value, s});
+            queue_.push({key, value, s, version_json});
         }
         cv_.notify_one();
         return true;
@@ -207,7 +207,8 @@ private:
                 continue;
             }
 
-            std::string m = msg::make_repl_set(item.key, item.value, item.seq);
+            std::string m = msg::make_repl_set(item.key, item.value, item.seq,
+                                                item.version_json);
             {
                 std::lock_guard<std::mutex> lock(io_mu_);
                 if (!net::send_msg(peer_fd_, m)) {
@@ -215,18 +216,18 @@ private:
                     continue;
                 }
             }
-            // For async mode, we don't wait for the ack to keep latency low.
-            // The ack is consumed by the peer connection handler thread.
             logger_.log("repl_sent_async", peer_id_,
                         "{\"key\":\"" + msg::json_escape(item.key) +
-                        "\",\"seq\":" + std::to_string(item.seq) + "}");
+                        "\",\"seq\":" + std::to_string(item.seq) +
+                        ",\"version\":" + item.version_json + "}");
         }
     }
 
     struct ReplItem {
         std::string key;
         std::string value;
-        uint64_t seq;
+        uint64_t    seq;
+        std::string version_json = "{}";
     };
 
     std::string mode_;

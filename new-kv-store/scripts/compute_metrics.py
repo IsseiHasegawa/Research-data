@@ -46,12 +46,16 @@ def compute_trial_metrics(trial_dir: Path) -> Dict[str, Any]:
     # ── Extract config from injector ──────────────────────────────────────────
     run_start = get_first_event(injector, "run_start")
     if run_start:
-        metrics["config"] = run_start.get("config", "")
-        metrics["hb_interval_ms"] = run_start.get("hb_interval_ms", 0)
-        metrics["hb_timeout_ms"] = run_start.get("hb_timeout_ms", 0)
-        metrics["repl_mode"] = run_start.get("repl_mode", "")
-        metrics["fault_type"] = run_start.get("fault_type", "")
-        metrics["run_id"] = run_start.get("run_id", "")
+        metrics["config"]             = run_start.get("config", "")
+        metrics["hb_interval_ms"]     = run_start.get("hb_interval_ms", 0)
+        metrics["hb_timeout_ms"]      = run_start.get("hb_timeout_ms", 0)
+        metrics["repl_mode"]          = run_start.get("repl_mode", "")
+        metrics["fault_type"]         = run_start.get("fault_type", "")
+        metrics["run_id"]             = run_start.get("run_id", "")
+        metrics["fd_algo"]            = run_start.get("fd_algo", "fixed")      # NEW
+        metrics["phi_threshold"]      = run_start.get("phi_threshold", None)   # NEW
+        metrics["workload_num_clients"]= run_start.get("workload_num_clients", 1)  # NEW
+        metrics["workload_zipf_alpha"]= run_start.get("workload_zipf_alpha", 0.0) # NEW
 
     # ── Detection latency ─────────────────────────────────────────────────────
     detection_result = get_first_event(injector, "detection_result")
@@ -138,6 +142,45 @@ def compute_trial_metrics(trial_dir: Path) -> Dict[str, Any]:
     repl_skipped = filter_events(node0, "repl_skipped") if node0 else []
     metrics["repl_skipped_count"] = len(repl_skipped)
 
+    # ── Stale read detection (read-your-writes violations) ────────────────────
+    stale_read_events = filter_events(workload, "stale_read")
+    metrics["stale_read_count"] = len(stale_read_events)
+    total_gets = len([e for e in filter_events(workload, "op_done")
+                      if e.get("op_type") == "GET"])
+    metrics["stale_read_rate"] = (
+        metrics["stale_read_count"] / total_gets if total_gets > 0 else 0.0
+    )  # fraction of GETs that were stale
+
+    # ── WAL recovery info ─────────────────────────────────────────────────────
+    wal_recovered = get_first_event(node0, "wal_recovered") if node0 else None
+    metrics["wal_recovered_entries"] = (
+        wal_recovered.get("extra", {}).get("entries", 0)
+        if isinstance(wal_recovered, dict) else 0
+    )
+
+    # ── Hot-key latency split (Zipf experiments) ──────────────────────────────
+    # "hot" = key_0..key_4 (top 10% of 50-key space); "cold" = rest
+    op_dones = filter_events(workload, "op_done")
+    hot_lat, cold_lat = [], []
+    for e in op_dones:
+        if not e.get("success") or "latency_us" not in e:
+            continue
+        key = e.get("key", "")
+        try:
+            idx = int(key.split("_")[-1])
+        except ValueError:
+            continue
+        (hot_lat if idx < 5 else cold_lat).append(e["latency_us"])
+
+    if hot_lat:
+        metrics["hot_key_latency_median_us"] = float(np.median(hot_lat))
+    else:
+        metrics["hot_key_latency_median_us"] = None
+    if cold_lat:
+        metrics["cold_key_latency_median_us"] = float(np.median(cold_lat))
+    else:
+        metrics["cold_key_latency_median_us"] = None
+
     return metrics
 
 
@@ -167,6 +210,8 @@ def aggregate_metrics(all_metrics: List[Dict]) -> List[Dict]:
             "detection_latency_ms", "downtime_ms",
             "write_latency_median_us", "write_latency_p95_us",
             "throughput_ops_sec", "false_positives", "repl_skipped_count",
+            "stale_read_count", "stale_read_rate",          # NEW
+            "hot_key_latency_median_us", "cold_key_latency_median_us",  # NEW
         ]
         for field in numeric_fields:
             values = [m[field] for m in trials if m.get(field) is not None]
@@ -187,6 +232,11 @@ def aggregate_metrics(all_metrics: List[Dict]) -> List[Dict]:
         hb_i = row["hb_interval_ms"]
         hb_t = row["hb_timeout_ms"]
         row["missed"] = hb_t / hb_i if hb_i > 0 else None
+
+        # Copy categorical fields from first trial
+        row["fd_algo"] = trials[0].get("fd_algo", "fixed")          # NEW
+        row["phi_threshold"] = trials[0].get("phi_threshold", None) # NEW
+        row["workload_zipf_alpha"] = trials[0].get("workload_zipf_alpha", 0.0)  # NEW
 
         aggregated.append(row)
 

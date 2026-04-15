@@ -1,0 +1,10 @@
+workload: num_clients=4 num_ops=600 key_space=50 distribution=zipf_alpha=0.990000
+client 3client 2client 0: connected
+: connected
+client 1: connected
+: connected
+client 1: done. success=600 fail=0 stale_reads=220
+client 2: done. success=600 fail=0 stale_reads=228
+client 3: done. success=600 fail=0 stale_reads=230
+client 0: done. success=600 fail=0 stale_reads=215
+workload: all clients done. total_ops=2400

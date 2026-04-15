@@ -1,1 +1,2 @@
 {"ts_ms":1775064761446,"node_id":"node1","run_id":"fd_fast_no_repl_t4_1775064761435","event":"node_start","peer_id":null,"extra":{"port":9101,"repl_mode":"none","is_primary":false,"hb_interval_ms":50,"hb_timeout_ms":150}}
+{"ts_ms":1776217733861,"node_id":"node1","run_id":"fd_fast_no_repl_t4_1776217733852","event":"node_start","peer_id":null,"extra":{"port":9101,"repl_mode":"none","fd_algo":"fixed","is_primary":false,"hb_interval_ms":50,"hb_timeout_ms":150,"phi_threshold":8.000000,"wal_enabled":true,"wal_recovered":0}}

@@ -1,3 +1,3 @@
-{"event": "run_start", "run_id": "delay_slow_async_t4_1775065187428", "ts_ms": 1775065187564, "config": "delay_slow_async", "hb_interval_ms": 200, "hb_timeout_ms": 600, "repl_mode": "async", "fault_type": "delay"}
-{"event": "fault_inject", "run_id": "delay_slow_async_t4_1775065187428", "ts_ms": 1775065190564, "fault_type": "delay", "target": "node1", "delay_ms": 500, "success": false}
-{"event": "detection_result", "run_id": "delay_slow_async_t4_1775065187428", "t_fault_ms": 1775065190564, "t_detect_ms": null, "detection_latency_ms": null}
+{"event": "run_start", "run_id": "delay_slow_async_t4_1776218193778", "ts_ms": 1776218193895, "config": "delay_slow_async", "hb_interval_ms": 200, "hb_timeout_ms": 600, "repl_mode": "async", "fd_algo": "fixed", "phi_threshold": 8.0, "fault_type": "delay", "workload_num_clients": 1, "workload_zipf_alpha": 0.0}
+{"event": "fault_inject", "run_id": "delay_slow_async_t4_1776218193778", "ts_ms": 1776218196895, "fault_type": "delay", "target": "node1", "delay_ms": 500, "success": false}
+{"event": "detection_result", "run_id": "delay_slow_async_t4_1776218193778", "t_fault_ms": 1776218196895, "t_detect_ms": null, "detection_latency_ms": null}

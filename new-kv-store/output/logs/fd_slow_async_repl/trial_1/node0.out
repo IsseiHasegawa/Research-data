@@ -1,2 +1,2 @@
 node0: listening on port 9100
-node0: connected to peer 127.0.0.1:9101 for heartbeat
+node0: connected to peer 127.0.0.1:9101 for heartbeat (fd_algo=fixed)
