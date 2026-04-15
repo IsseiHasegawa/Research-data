@@ -1,3 +1,0 @@
-{"event": "run_start", "run_id": "quick_no_repl_t2_1774995133157", "ts_ms": 1774995133274, "config": "quick_no_repl", "hb_interval_ms": 100, "hb_timeout_ms": 300, "repl_mode": "none", "fault_type": "crash"}
-{"event": "fault_inject", "run_id": "quick_no_repl_t2_1774995133157", "ts_ms": 1774995135274, "fault_type": "crash", "target": "node1"}
-{"event": "detection_result", "run_id": "quick_no_repl_t2_1774995133157", "t_fault_ms": 1774995135274, "t_detect_ms": 1774995135477, "detection_latency_ms": 203}

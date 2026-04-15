@@ -55,7 +55,11 @@ def wait_for_port(port: int, timeout: float = 5.0) -> bool:
 
 def send_fault_delay(port: int, delay_ms: int) -> bool:
     """Send a FAULT_DELAY message to a node to inject application-level delay."""
-    msg = json.dumps({"type": "FAULT_DELAY", "delay_ms": delay_ms}) + "\n"
+    # Compact JSON (no space after ':') — C++ msg::extract_type only matches "\"type\":\""
+    msg = json.dumps(
+        {"type": "FAULT_DELAY", "delay_ms": delay_ms},
+        separators=(",", ":"),
+    ) + "\n"
     last_err = None
     for _ in range(25):
         try:

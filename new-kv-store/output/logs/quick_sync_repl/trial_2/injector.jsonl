@@ -1,3 +1,0 @@
-{"event": "run_start", "run_id": "quick_sync_repl_t2_1774995145879", "ts_ms": 1774995146006, "config": "quick_sync_repl", "hb_interval_ms": 100, "hb_timeout_ms": 300, "repl_mode": "sync", "fault_type": "crash"}
-{"event": "fault_inject", "run_id": "quick_sync_repl_t2_1774995145879", "ts_ms": 1774995148006, "fault_type": "crash", "target": "node1"}
-{"event": "detection_result", "run_id": "quick_sync_repl_t2_1774995145879", "t_fault_ms": 1774995148006, "t_detect_ms": 1774995148196, "detection_latency_ms": 190}
