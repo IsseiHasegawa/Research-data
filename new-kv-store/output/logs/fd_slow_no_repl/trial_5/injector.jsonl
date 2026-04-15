@@ -1,3 +1,3 @@
-{"event": "run_start", "run_id": "fd_slow_no_repl_t5_1776235357563", "ts_ms": 1776235357685, "config": "fd_slow_no_repl", "hb_interval_ms": 200, "hb_timeout_ms": 600, "repl_mode": "none", "fd_algo": "fixed", "phi_threshold": 8.0, "fault_type": "crash", "workload_num_clients": 1, "workload_zipf_alpha": 0.0}
-{"event": "fault_inject", "run_id": "fd_slow_no_repl_t5_1776235357563", "ts_ms": 1776235360685, "fault_type": "crash", "target": "node1"}
-{"event": "detection_result", "run_id": "fd_slow_no_repl_t5_1776235357563", "t_fault_ms": 1776235360685, "t_detect_ms": 1776235361129, "detection_latency_ms": 444}
+{"event": "run_start", "run_id": "fd_slow_no_repl_t5_1776262351627", "ts_ms": 1776262351746, "config": "fd_slow_no_repl", "hb_interval_ms": 200, "hb_timeout_ms": 600, "repl_mode": "none", "fd_algo": "fixed", "phi_threshold": 8.0, "fault_type": "crash", "workload_num_clients": 1, "workload_zipf_alpha": 0.0}
+{"event": "fault_inject", "run_id": "fd_slow_no_repl_t5_1776262351627", "ts_ms": 1776262354746, "fault_type": "crash", "target": "node1"}
+{"event": "detection_result", "run_id": "fd_slow_no_repl_t5_1776262351627", "t_fault_ms": 1776262354746, "t_detect_ms": 1776262355185, "detection_latency_ms": 439}

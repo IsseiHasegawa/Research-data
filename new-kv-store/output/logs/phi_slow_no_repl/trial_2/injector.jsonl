@@ -1,3 +1,3 @@
-{"event": "run_start", "run_id": "phi_slow_no_repl_t2_1776236216868", "ts_ms": 1776236216991, "config": "phi_slow_no_repl", "hb_interval_ms": 200, "hb_timeout_ms": 600, "repl_mode": "none", "fd_algo": "phi", "phi_threshold": 8.0, "fault_type": "crash", "workload_num_clients": 1, "workload_zipf_alpha": 0.0}
-{"event": "fault_inject", "run_id": "phi_slow_no_repl_t2_1776236216868", "ts_ms": 1776236219991, "fault_type": "crash", "target": "node1"}
-{"event": "detection_result", "run_id": "phi_slow_no_repl_t2_1776236216868", "t_fault_ms": 1776236219991, "t_detect_ms": 1776236220426, "detection_latency_ms": 435}
+{"event": "run_start", "run_id": "phi_slow_no_repl_t2_1776263201016", "ts_ms": 1776263201147, "config": "phi_slow_no_repl", "hb_interval_ms": 200, "hb_timeout_ms": 600, "repl_mode": "none", "fd_algo": "phi", "phi_threshold": 8.0, "fault_type": "crash", "workload_num_clients": 1, "workload_zipf_alpha": 0.0}
+{"event": "fault_inject", "run_id": "phi_slow_no_repl_t2_1776263201016", "ts_ms": 1776263204147, "fault_type": "crash", "target": "node1"}
+{"event": "detection_result", "run_id": "phi_slow_no_repl_t2_1776263201016", "t_fault_ms": 1776263204147, "t_detect_ms": 1776263204574, "detection_latency_ms": 427}

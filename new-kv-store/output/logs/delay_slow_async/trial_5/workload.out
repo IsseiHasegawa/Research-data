@@ -1,4 +1,4 @@
 workload: num_clients=1 num_ops=600 key_space=50 distribution=uniform
 client 0: connected
-client 0: done. success=600 fail=0 stale_reads=238
+client 0: done. success=600 fail=0 stale_reads=258
 workload: all clients done. total_ops=600
